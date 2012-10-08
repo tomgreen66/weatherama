@@ -1,0 +1,5 @@
+Mysql
+GRANT ALL ON met.* TO fahren IDENTIFIED BY 'byte1'
+
+
+192.168.0.29 met.fahren

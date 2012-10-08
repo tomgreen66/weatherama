@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+
+<title>Phys Phone Parameters</title>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script src="/js/jquery/jquery.throttle.js"></script>
+<script type="text/javascript">
+
+window.addEventListener("deviceorientation", $.throttle( 100, handle_device_orientation_change ));
+//window.addEventListener("orientationchange", handle_orientation_change);
+
+function handle_device_orientation_change(event)
+{
+    var direction = 0;
+    if (event.getCurrentHeading != undefined)
+  //  {
+  //      direction = event.getCurrentHeading;
+  //  }
+ //   else if (event.alpha != null) {
+        direction = event.alpha;
+  //  }
+	var in_ang = new Array();
+	in_ang[0]=event.beta;
+	in_ang[1]=event.gamma;
+	in_ang[2]=direction ;
+	//in_ang[0]=25;
+	//in_ang[1]=90;
+	//in_ang[2]=0;
+		
+	
+    xycoords = convert_to_xy(in_ang);	
+	$("#z").html("Alpha " + event.alpha + "<br/> Beta " +event.beta+ "<br/> Gamma " + event.gamma);
+    $("#x").text(xycoords[0]);
+    $("#y").text(xycoords[1]);
+
+	var tp = Math.round(xycoords[1]*20+200);
+	var lf = Math.round(xycoords[0]*20+200);
+	//$("#y").text(lf + ": :" +tp);
+	$("#box").css("top", tp + "px");
+	$("#box").css("left", lf + "px");
+	//document.getElementById("box").left=(xycoords[0]*30+200);
+	//document.getElementById("box").top=(xycoords[1]*30+200);
+	$("#testbox2").html(180*Math.atan(xycoords[0]/xycoords[1])/Math.PI);
+}
+
+</script>
+<script type="text/javascript">
+
+// Function converts a (currently hardcoded) camera direction and object bearing, to x,y on a screen.
+function convert_to_xy(cam_angles) {
+
+  //$("#z").append("convert to xy called");
+  var obj_pos = new Array();
+  obj_pos[0] = 0;
+  obj_pos[1] = 0;
+  obj_pos[2] = -1000000;
+  
+  //convert all angles to radians
+  cam_angles[0] *= Math.PI / 180.0;
+  cam_angles[1] *= Math.PI / 180.0;
+  cam_angles[2] *= Math.PI / 180.0;
+
+  var i;
+  var j;
+  var k;
+  //set up matrices for multiplication
+  
+  //initialise
+  var matA = new Array();
+  var matB = new Array();
+  var matC = new Array();
+  for (i=0; i<3;i++) {
+    matA[i] = new Array();
+	matB[i] = new Array();
+	matC[i] = new Array();
+  }
+  for (i=0; i<3;i++) {
+    for (j=0; j<3;j++) {
+      matA[i][j]=0.0;
+	  matB[i][j]=0.0;
+	  matC[i][j]=0.0;
+	  
+	}
+  }
+  matA[0][0]=1.0;
+  matA[1][1]=Math.cos(cam_angles[0]);
+  matA[2][1]= - Math.sin(cam_angles[0]);
+  matA[1][2]=Math.sin(cam_angles[0]);
+  matA[2][2]=Math.cos(cam_angles[0]);
+  
+  matB[1][1]=1.0;
+  matB[0][0]=Math.cos(cam_angles[1]);
+  matB[0][2]= - Math.sin(cam_angles[1]);
+  matB[2][0]=Math.sin(cam_angles[1]);
+  matB[2][2]=Math.cos(cam_angles[1]);
+	  
+  matC[2][2]=1.0;
+  matC[0][0]=Math.cos(cam_angles[2]);
+  matC[0][1]=Math.sin(cam_angles[2]);
+  matC[1][0]= - Math.sin(cam_angles[2]);
+  matC[1][1]=Math.cos(cam_angles[2]);
+  //$("#z").text("about to multiply matrices");
+  var mat_full = matmul3x3(matC,matmul3x3(matA,matB));
+  //$("#z").text("Returned from matrix call");
+  var d = matmul3x1(mat_full,obj_pos);
+
+  //$("#testbox2").append(180*Math.atan(d[0]/d[1])/Math.PI);
+  var out = new Array();
+
+  out[0] = d[0]/d[2];
+  out[1] = d[1]/d[2];
+
+  return out;
+  
+}
+
+function matmul3x3(a,b) {
+  var out = new Array();
+  var i;
+  var j;
+  var u;
+  //$("#z").text("Mat call " + b[0][0]+ " " +b[0][1] + " " + b[0][2]);
+  
+  for (i=0; i<3;i++) {
+    out[i] = new Array();
+  } 
+  for (i=0; i<3;i++) {
+    for (j=0; j<3;j++) {
+      out[i][j]=0.0;
+	  for (u=0; u<3;u++) {
+	    out[i][j] += a[u][j]*b[i][u];
+	  }
+	}
+  } 
+  //$("#z").text("Mat call" + out[0][0]); 
+  return out;  
+}
+
+function matmul3x1(a,b) {
+  var out = new Array();
+  var i;
+  var j; 
+  for (i=0; i<3;i++) {
+    out[i] = 0.0;
+	for (j=0; j<3;j++) {
+	  out[i]+=a[j][i]*b[j];
+	}
+  }
+  return out;  
+}
+
+function testmatmul() {
+    //initialise
+  var matA = new Array();
+  var matB = new Array();
+  var matC = new Array();
+  for (i=0; i<3;i++) {
+    matA[i] = new Array();
+  }
+  for (i=0; i<3;i++) {
+    for (j=0; j<3;j++) {
+      matA[i][j]=0.0;
+
+	  
+	}
+  }
+  matA[0][0]=1;
+  matA[0][1]=2;
+  matA[0][2]=3;
+  matA[2][0]=4;
+  matA[2][1]=5;
+  matA[2][2]=6;
+  matB[0]=4;
+  matB[1]=5;
+  matB[2]=6;
+
+  out = matmul3x1(matA,matB);  
+  $("#testbox").append(out[0]+" " +out[1] + " " + out[2]);
+}
+</script>
+</head>
+
+<body style="position:relative;" onload="testmatmul()">
+<p id ="testbox2" />
+<p id="x"></p><p id="y"></p><p id="z"></p>
+<p id ="testbox2" />
+
+<div id="box" style="background:#000;position:absolute;height:15px;width:45px"/>
+
+
+</body>

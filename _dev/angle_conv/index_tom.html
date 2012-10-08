@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+
+<title>Phys Phone Parameters</title>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script src="/js/jquery/jquery.throttle.js"></script>
+<script type="text/javascript">
+
+window.addEventListener("deviceorientation", $.throttle( 10, handle_device_orientation_change ));
+//window.addEventListener("orientationchange", handle_orientation_change);
+
+var angle_from_north = 0.0;
+var angle_from_horizon = 0.0;
+var dir_archive = new Array();
+var dir_archive2 = new Array();
+function handle_device_orientation_change(event)
+{
+    var direction = 0.0;
+    if (event.webkitCompassHeading != undefined)
+    {
+        direction = event.webkitCompassHeading;
+    }
+    else if (event.alpha != null) {
+        direction = event.alpha;
+    }
+    direction = (180 - direction) * Math.PI / 180;
+	gamma = (event.gamma - 90) * Math.PI / 180;
+    set_camera_angles(direction, gamma);
+}
+function set_camera_angles(direction, gamma) {
+    //alert("direction: " + direction + "   gamma: " + gamma);
+    dir_archive.push(Math.sin(direction));
+	if (dir_archive.length>20) {
+	  dir_archive.shift();
+	}
+	direction=0.0;
+	for (i=0;i<dir_archive.length;i++) {
+	  direction +=dir_archive[i];
+	}  
+	direction/=dir_archive.length;
+    alert(direction);
+	direction = Math.asin(direction);
+    alert(direction);
+    alert(gamma);
+	dir_archive2.push(Math.sin(gamma));
+    alert(Math.sin(gamma));
+	if (dir_archive2.length>20) {
+	  dir_archive2.shift();
+	}
+	var counter=0.0;
+	for (i=0;i<dir_archive2.length;i++) {
+	  counter +=dir_archive2[i];
+	}  
+	counter/=dir_archive2.length;	
+	counter = Math.asin(counter);
+    //alert(counter);
+    //alert("angle_from_north: " + direction + " angle_from_horizon: " + counter);
+    angle_from_north = direction;
+   // angle_from_north = angle_from_north * Math.PI / 180.0;
+    angle_from_horizon = counter;
+  //  angle_from_horizon = angle_from_horizon * Math.PI / 180.0;
+    $("#x").html(angle_from_north);
+    $("#y").html(angle_from_horizon);
+    var result = get_object_viewport_fractions(0, -10, 1);
+    if (result[0] == null) {
+        $("#z").html("out of bounds");
+    }
+    else {
+        $("#z").html(result[0] + "     " + result[1]);
+		var tp = Math.round(result[1]*800);
+	    var lf = Math.round(result[0]*480);
+	    //$("#y").text(lf + ": :" +tp);
+	    $("#box").css("top", tp + "px");
+	    $("#box").css("left", lf + "px");
+    }
+/*    $("#orient_text").text(180 - direction);
+    $("#beta").text(event.beta);
+    $("#gamma").text(event.gamma - 90);
+	var in_ang = new Array();
+	in_ang[0]=event.beta;
+	in_ang[1]= - event.gamma;
+	in_ang[2]=event.alpha -180;
+	in_ang[0]=0;
+	in_ang[1]= - 0;
+	in_ang[2]=0;
+		
+	
+    xycoords = convert_to_xy(in_ang);	
+	$("#z").html("Alpha " + event.alpha + "<br/> Beta " +event.beta+ "<br/> Gamma " + event.gamma);
+    $("#x").text(xycoords[0]);
+    $("#y").text(xycoords[1]);
+
+	var tp = Math.round(xycoords[1]*20+200);
+	var lf = Math.round(xycoords[0]*20+200);
+	//$("#y").text(lf + ": :" +tp);
+	$("#box").css("top", tp + "px");
+	$("#box").css("left", lf + "px");
+	//document.getElementById("box").left=(xycoords[0]*30+200);
+	//document.getElementById("box").top=(xycoords[1]*30+200);
+	*/
+}
+
+function get_object_viewport_fractions(x, y, z) {
+    // Z
+    var r_xyz = Math.sqrt(x * x + y * y + z * z);
+    var r_xy = Math.sqrt(x * x + y * y);
+    var theta_z = Math.atan2(z, r_xy);
+    var dtheta_camera_centre = theta_z - angle_from_horizon;
+    if (dtheta_camera_centre > 0.15 || dtheta_camera_centre < -0.15) {
+        return [null, null]
+    }
+    var theta_z_down_from_top_of_camera = (0.15 - dtheta_camera_centre);
+    // XY
+    var theta_xy = Math.atan2(x, y);
+    var dtheta_xy_camera_centre = angle_from_north - theta_xy;
+    if (dtheta_xy_camera_centre > 0.3 || dtheta_xy_camera_centre < -0.3) {
+        return [null, null]
+    }
+    var theta_xy_right_from_left_of_camera = (0.3 - dtheta_xy_camera_centre);    
+    var x_camera_fraction = theta_xy_right_from_left_of_camera / 0.6;
+    var z_camera_fraction = theta_z_down_from_top_of_camera / 0.3
+    return [x_camera_fraction, z_camera_fraction]
+}
+
+function test() {
+    //var x = get_object_viewport_fractions(0, 10, 1);
+    var y = get_object_viewport_fractions(10, 0, 1);
+    set_camera_angles(0, 0);
+}
+//	var tp = Math.round(xycoords[1]*20+200);
+//	var lf = Math.round(xycoords[0]*20+200);
+//	//$("#y").text(lf + ": :" +tp);
+//	$("#box").css("top", tp + "px");
+//	$("#box").css("left", lf + "px");
+</script>
+</head>
+
+<body style="position:relative;" onload="test()">
+<p id ="testbox" />
+<p id="x"></p><p id="y"></p><p id="z"></p>
+<p id ="testbox2" />
+
+<div id="box" style="background:#000;position:absolute;height:15px;width:45px"/>
+
+
+</body>
+</html>

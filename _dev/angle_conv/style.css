@@ -1,0 +1,12 @@
+body {
+  background:#000;
+}
+
+#border{
+  background:GreenYellow;
+  border: solid 1px #000;
+  margin: 5px;
+  width: auto;
+  height: auto;  
+  border-radius: 5px;
+}

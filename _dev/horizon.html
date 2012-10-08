@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Draw a horizon</title>
+<link rel="stylesheet" type="text/css" href="http://yui.yahooapis.com/3.7.2/build/cssreset/cssreset-min.css">
+<link href="horizon.css" type="text/css" rel="stylesheet"> 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script src="/js/jquery/jquery.throttle.js"></script>
+
+</head>
+
+<body>
+
+
+<canvas width="800" height="800" id="c"></canvas>
+
+<p id="orient_text"></p>
+<p id="beta"></p>
+<p id="gamma"></p>
+
+
+<script type="text/javascript">
+
+window.addEventListener("deviceorientation", $.throttle( 100, handle_device_orientation_change ) );
+//window.addEventListener("orientationchange", handle_orientation_change);
+
+function handle_device_orientation_change(event){
+	var angle_now = event.beta; 
+	var rads = angle_now * (Math.PI/180);
+    var direction = 0;
+    if (event.webkitCompassHeading != undefined)
+    {
+        direction = event.webkitCompassHeading;
+    }
+    else if (event.alpha != null) {
+        direction = event.alpha;
+    }
+    //$("#orient_text").text('compass:'direction);
+    //$("#beta").text('angle:'+event.beta);
+    //$("#gamma").text('pitch:'+event.gamma);
+    
+    drawHorizon(rads);
+    
+}
+
+
+
+function drawHorizon(angle){
+
+var canvas = document.getElementById('c');
+
+//cvas.width = cvas.width;
+
+var c2 = canvas.getContext('2d');
+c2.clearRect(0, 0, canvas.width, canvas.height);
+c2.fillStyle = '#f00';
+
+c2.restore();
+//topright_x=800;
+
+//topright_y= 200-(Math.tan(angle)*810); 
+tany= Math.tan(angle);
+topright_y = 200 - (Math.tan(angle)*810);
+$("#beta").text('angle:'+angle);
+$("#gamma").text('tan:'+tany);
+
+
+c2.beginPath();
+c2.moveTo(-10, 200);
+c2.lineTo(800, topright_y);
+c2.lineTo(800, 600);
+c2.lineTo(-10, 600);
+c2.closePath();
+c2.fill();
+
+}
+</script>
+
+
+</body>

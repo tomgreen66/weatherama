@@ -1,0 +1,7 @@
+#canvas {
+	position: relative;
+	display: block;
+}
+.icon {
+	position: absolute;
+}
